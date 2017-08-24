@@ -1,5 +1,15 @@
 ﻿# coding=utf-8
+'''
+DMI指标是威尔德大师认为比较有成就和实用的一套技术分析工具。虽然其计算过程比较烦琐，但技术分析软件的运用可以使投资者省去复杂的计算过程，专心于掌握指标所揭示的真正含义、领悟其研判行情的独到的功能。
+和其他技术指标不同的是，DMI指标的研判动能主要是判别市场的趋势。在应用时，DMI指标的研判主要是集中在两个方面，一个方面是分析上升指标+DI、下降指标-DI和平均动向指标ADX之间的关系，另一个方面是对行情的趋势及转势特征的判断。
+其中，+DI和-DI两条曲线的走势关系是判断能否买卖的信号，ADX则是判断未来行情发展趋势的信号。
 
++DI在-DI上方,股票行情以上涨为主;+DI在-DI下方，股票行情以下跌为主。
+在股票价格上涨行情中，当+DI向上交叉-DI，是买进信号，相反,当+DI向下交叉-DI，是卖出信号。
+-DI从20以下上升到50以上,股票价格很有可能会有一波中级下跌行情。
++DI从20以下上升到50以上,股票价格很有可能会有一波中级上涨行情。
++DI和-DI以20为基准线上下波动时，该股票多空双方拉锯战,股票价格以箱体整理为主。
+'''
 from __future__ import division
 
 import os
@@ -78,7 +88,7 @@ def adx(stock_data, n=14):
     df.dropna(inplace=True)
 
     df['tr'] = pd.rolling_sum(df['temp'], n)
-
+    #计算+DI、-DI值
     df.ix[(df['hd'] > 0) & (df['hd'] > df['ld']), 'hd1'] = df['hd']
     df['hd1'].fillna(0, inplace=True)
 
@@ -91,7 +101,13 @@ def adx(stock_data, n=14):
     df['pdi'] = df['dmp'] / df['tr'] * 100
     df['mdi'] = df['dmm'] / df['tr'] * 100
     df.dropna(inplace=True)
-
+    
+    #计算ADX指标
+    df['di_diff'] = abs(df['pdi']-df['mdi'])
+    df['di_sum'] = df['pdi']+df['mdi']
+    df['adx'] = pd.rolling_mean(df['di_diff']/df['di_sum']*100,n)
+    df.dropna(inplace=True)
+    
     # 当+DI上穿-DI，买入，信号为1
     df.ix[df['pdi'] > df['mdi'], 'signal'] = 1
     # 当+DI下穿-DI，卖空，信号为-1
@@ -169,7 +185,7 @@ def max_drawdown(date_line, capital_line):
 
 
 # 遍历数据文件夹中所有股票文件的文件名，得到股票代码列表
-stock_code_list = ['601318','002594','000069','300309','000002','000860','601166']
+stock_code_list = ['601318']#,'002594','300309','000002','000860','601166']
 # 此处为股票数据文件的本地路径，请自行修改
 '''
 for root, dirs, files in os.walk('E:/LHClass/stock_data'):
