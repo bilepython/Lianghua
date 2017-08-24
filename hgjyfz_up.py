@@ -12,14 +12,13 @@ from datetime import datetime
 from dateutil.parser import parse
 
 #获取第一天及最近的日
-
 stock_basics = ts.get_stock_basics()
 
 end = datetime.today()
 end = datetime.strftime(end,'%Y-%m-%d')
-stock_list = ['sh601318','sz002594','sz000069','sz300512','sz000002','sz000860','sz399006']
+stock_list = ['sh601318','sz002594','sz000069','sz300512','sz000002','sz000860','sz399006','sh601166']
 output = pd.DataFrame()
-#stock_list = ['300512']
+#stock_list = ['sh601166']
 for stock in stock_list:
     stock1= stock.strip('shz')
     if stock1.startswith('39'):
@@ -47,8 +46,8 @@ for stock in stock_list:
     # ==========计算海龟法则的买卖
     # 设定海龟法则的两个参数，当收盘价大于最近N1天的最高价时买入，当收盘价低于最近N2天的最低价时卖出
     # 这两个参数可以自行调整大小，但是一般N1 > N2
-    N1 = 20
-    N2 = 10
+    N1 = 26
+    N2 = 14
     
     # 通过rolling_max方法计算high_N1价
     index_data['price_sum'] =  pd.rolling_sum(index_data['close']*index_data['volume'],N1)
@@ -114,6 +113,7 @@ for stock in stock_list:
     
     index_data['hg_change1'] = index_data['change'] * index_data['position1']
     year_rtn = index_data.set_index('date')[['change', 'hg_change','hg_change1']].\
-               resample('A', how=lambda x: (x+1.0).prod() - 1.0) * 100
-
-    year_rtn.to_csv(r'E:\LHClass\Result_Data\{}_yeatr.csv'.format(stock), encoding='gbk')
+               resample('BA-DEC', how=lambda x: (x+1.0).prod())
+    year_rtn_prod = year_rtn.apply(lambda x: x.cumprod())
+    df = pd.concat([year_rtn,year_rtn_prod],axis=1)
+    df.to_csv(r'E:\LHClass\Result_Data\{}_yeatr.csv'.format(stock), encoding='gbk')
