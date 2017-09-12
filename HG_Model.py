@@ -16,10 +16,12 @@ stock_basics = ts.get_stock_basics()
 
 end = datetime.today()
 end = datetime.strftime(end,'%Y-%m-%d')
-stock_list = ['sh601318','sz002594','sz000069','sz300512','sz000002','sz000860','sz399006','sh601166']
+#stock_list = ['sh601318','sz002594','sz000333','sh600582','sh600892','sh600817','sz300512','sz000002','sz399006','sh601166','sz399005']
+stock_list = {'sh601318':26,'sz002594':12,'sz000333':30,'sh600582':18,'sh600892':18,'sh600817':20,\
+     'sz300512':12,'sz000002':30,'sz399005':24,'sz399006':18,'sh601166':26}
 output = pd.DataFrame()
 #stock_list = ['sh601166']
-for stock in stock_list:
+for stock,N in stock_list.items():
     stock1= stock.strip('shz')
     if stock1.startswith('39'):
         start = '2010-06-02'
@@ -31,6 +33,7 @@ for stock in stock_list:
         index = False
     df = ts.get_k_data(code=stock1, start=start, end=end,index=index)
     df['change'] = df['close'].pct_change() 
+    df.dropna(inplace=True)
     df.to_csv('E:/LHClass/stock_data/{}.csv'.format(stock1),encoding='gbk')
 
     # ==========导入上证指数的原始数据
@@ -46,7 +49,7 @@ for stock in stock_list:
     # ==========计算海龟法则的买卖
     # 设定海龟法则的两个参数，当收盘价大于最近N1天的最高价时买入，当收盘价低于最近N2天的最低价时卖出
     # 这两个参数可以自行调整大小，但是一般N1 > N2
-    N1 = 26
+    N1 = N
     N2 = 14
     
     # 通过rolling_max方法计算high_N1价
@@ -100,7 +103,7 @@ for stock in stock_list:
     index_data[['date', 'high', 'low', 'close', 'volume','change', 'high_N1',
             'low_N2','price_w','signal','signal1', 'position', 'position1','zjindex', 'zjindex1']].to_csv(r'E:\LHClass\Result_Data\turtle_{}.csv'.format(stock), index=False, encoding='gbk')
    
-    max_index = len(index_data)
+    max_index = len(index_data)-1
     l = len(output)
     output.loc[l, 'code'] = stock
     output.loc[l, 'signal'] =index_data.loc[max_index,'signal']
